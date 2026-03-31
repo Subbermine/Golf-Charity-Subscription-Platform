@@ -38,7 +38,7 @@ const AdminLayout = () => {
         isMobileOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="h-16 flex items-center px-6 border-b border-white/5">
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/admin" className="flex items-center gap-2 group">
             <Trophy className="h-6 w-6 text-brand-500" />
             <span className="font-display font-bold text-lg tracking-tight text-white group-hover:text-brand-400 transition-colors">
               CharitySwing Admin

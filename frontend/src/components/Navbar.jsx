@@ -31,20 +31,21 @@ const Navbar = () => {
   // useEffect(() => {user.role="admin"}, [user]); // Re-render when user state changes
   return (
     <header className="sticky top-0 z-50 w-full glass">
-      {console.log('Navbar render - user:', user)}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="flex items-center gap-2 group">
-              <Gift className="h-8 w-8 text-brand-500 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="font-display font-bold text-xl tracking-tight text-white group-hover:text-gradient transition-all duration-300">
-                CharitySwing
-              </span>
-            </Link>
+              <Link to="/" className="flex items-center gap-2 group">
+                <Gift className="h-8 w-8 text-brand-500 group-hover:rotate-12 transition-transform duration-300" />
+                <span className="font-display font-bold text-xl tracking-tight text-white group-hover:text-gradient transition-all duration-300">
+                  CharitySwing
+                </span>
+              </Link>
           </div>
           
           <nav className="hidden md:flex space-x-8 items-center">
+            {!user&& (
             <NavLink to="/" setIsOpen={setIsOpen}>Home</NavLink>
+            )}
             <NavLink to="/charities" setIsOpen={setIsOpen}>Charities</NavLink>
             <NavLink to="/draws" setIsOpen={setIsOpen}>Draw Results</NavLink>
             

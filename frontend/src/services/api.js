@@ -28,6 +28,42 @@ export const authService = {
   }
 };
 
+// Admin Services
+export const adminService = {
+  getUsers: async () => {
+    const response = await api.get('/admin/users');
+    return response.data;
+  },
+  getReports: async () => {
+    const response = await api.get('/admin/reports');
+    return response.data;
+  }
+};
+
+// Draw Services
+export const drawService = {
+  runDraw: async (drawData) => {
+    const response = await api.post('/draw/run', drawData);
+    return response.data;
+  },
+  publishResults: async (drawId) => {
+    const response = await api.put(`/draw/${drawId}/publish`);
+    return response.data;
+  },
+  getLatestDraw: async () => {
+    const response = await api.get('/draw/latest');
+    return response.data;
+  },
+  getAdminLatestDraw: async () => {
+    const response = await api.get('/draw/admin/latest');
+    return response.data;
+  },
+  getHistory: async () => {
+    const response = await api.get('/draw/history');
+    return response.data;
+  }
+};
+
 // Score Services
 export const scoreService = {
   getScores: async () => {
@@ -46,6 +82,22 @@ export const charityService = {
   getCharities: async () => {
     const response = await api.get('/charity');
     return response.data;
+  },
+  createCharity: async (charityData) => {
+    const response = await api.post('/charity', charityData);
+    return response.data;
+  },
+  updateCharity: async (id, charityData) => {
+    const response = await api.put(`/charity/${id}`, charityData);
+    return response.data;
+  }
+};
+
+// User Services
+export const userService = {
+  updateProfile: async (userData) => {
+    const response = await api.put('/user/profile', userData);
+    return response.data;
   }
 };
 
@@ -57,6 +109,22 @@ export const subscriptionService = {
   },
   subscribe: async (plan) => {
     const response = await api.post('/user/subscribe', { plan });
+    return response.data;
+  }
+};
+
+// Winner Services
+export const winnerService = {
+  getWinners: async () => {
+    const response = await api.get('/winner/all');
+    return response.data;
+  },
+  updateStatus: async (id, status) => {
+    const response = await api.put(`/winner/${id}/verify`, { status });
+    return response.data;
+  },
+  getMyWinnings: async () => {
+    const response = await api.get('/winner/my');
     return response.data;
   }
 };

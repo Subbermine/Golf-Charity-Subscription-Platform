@@ -1,18 +1,56 @@
-import React from 'react';
-import { Users, TrendingUp, Trophy, Heart } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Users, TrendingUp, Trophy, Heart, Loader2 } from 'lucide-react';
+import useStore from '../../store/useStore';
+import { Link} from 'react-router-dom';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar
 } from 'recharts';
 
 const Overview = () => {
+  const { adminReports, latestDraw, fetchAdminReports, fetchLatestDraw, isLoading } = useStore();
+
+  useEffect(() => {
+    fetchAdminReports();
+    fetchLatestDraw();
+  }, [fetchAdminReports, fetchLatestDraw]);
+
   const kpiData = [
-    { title: 'Total Users', value: '12,450', trend: '+12%', icon: Users, color: 'text-brand-400', bg: 'bg-brand-500/10' },
-    { title: 'Active Subscriptions', value: '8,210', trend: '+8%', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { title: 'Total Prize Pool', value: '$45,200', trend: '+24%', icon: Trophy, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { title: 'Charity Contributions', value: '$112,500', trend: '+15%', icon: Heart, color: 'text-rose-400', bg: 'bg-rose-500/10' }
+    { 
+      title: 'Total Users', 
+      value: adminReports?.totalUsers?.toLocaleString() || '0', 
+      trend: '+0%', 
+      icon: Users, 
+      color: 'text-brand-400', 
+      bg: 'bg-brand-500/10' 
+    },
+    { 
+      title: 'Active Subscriptions', 
+      value: adminReports?.activeSubs?.toLocaleString() || '0', 
+      trend: '+0%', 
+      icon: TrendingUp, 
+      color: 'text-emerald-400', 
+      bg: 'bg-emerald-500/10' 
+    },
+    { 
+      title: 'Total Prize Pool', 
+      value: `$${adminReports?.totalPrizePool || 0}`, 
+      trend: '+0%', 
+      icon: Trophy, 
+      color: 'text-amber-400', 
+      bg: 'bg-amber-500/10' 
+    },
+    { 
+      title: 'Charity Contributions', 
+      value: `$${adminReports?.totalDonations?.toLocaleString() || '0'}`, 
+      trend: '+0%', 
+      icon: Heart, 
+      color: 'text-rose-400', 
+      bg: 'bg-rose-500/10' 
+    }
   ];
 
+  // Placeholder charts data (since backend doesn't provide historical yet)
   const revenueData = [
     { name: 'Jan', revenue: 4000, charity: 2400 },
     { name: 'Feb', revenue: 5000, charity: 3000 },
@@ -28,6 +66,14 @@ const Overview = () => {
     { name: 'Week 3', participants: 5200 },
     { name: 'Week 4', participants: 6000 },
   ];
+
+  if (isLoading && !adminReports) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="animate-spin text-brand-500 h-8 w-8" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -116,34 +162,52 @@ const Overview = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
-           <h2 className="text-lg font-bold text-white mb-4">Recent Users</h2>
+           <h2 className="text-lg font-bold text-white mb-4">Latest Platform Activity</h2>
            <div className="space-y-4">
-             {[1,2,3,4].map(i => (
-               <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-sm">
-                      P{i}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white text-sm">Player {i}</p>
-                      <p className="text-slate-500 text-xs mt-0.5">Joined 2 hours ago</p>
-                    </div>
+             {!adminReports?.recentUsers?.length ? (
+               <p className="text-slate-500 text-sm italic">No recent activity found.</p>
+             ) : (
+               adminReports.recentUsers.map((u, i) => (
+                 <div key={u._id} className="flex justify-between items-center border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                   <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-sm">
+                        {u.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white text-sm">{u.name}</p>
+                        <p className="text-slate-500 text-xs mt-0.5">Joined {new Date(u.createdAt).toLocaleDateString()}</p>
+                      </div>
+                   </div>
+                   <span className="px-2 py-1 bg-brand-500/10 text-brand-400 rounded text-xs font-medium capitalize">{u.subscriptionId?.plan || 'Free'}</span>
                  </div>
-                 <span className="px-2 py-1 bg-brand-500/10 text-brand-400 rounded text-xs font-medium">Pro Plan</span>
-               </div>
-             ))}
+               ))
+             )}
            </div>
         </div>
 
         <div className="glass-card p-6 border-brand-500/20 shadow-lg shadow-brand-500/5">
            <h2 className="text-lg font-bold text-white mb-4">Latest Draw Summary</h2>
            <div className="h-full flex flex-col justify-center items-center text-center py-4">
-              <Trophy className="h-16 w-16 text-brand-400 mb-4" />
-              <p className="text-3xl font-bold text-white mb-1">Draw #42</p>
-              <p className="text-slate-400 mb-6">Concluded Oct 15 • 159 Winners</p>
-              <button className="px-6 py-2 bg-white text-black font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">
-                View Full Results
-              </button>
+              {latestDraw ? (
+                <>
+                  <Trophy className="h-16 w-16 text-brand-400 mb-4" />
+                  <p className="text-3xl font-bold text-white mb-1">Draw {latestDraw.month}</p>
+                  <p className="text-slate-400 mb-6">
+                    {latestDraw.isPublished ? 'Published' : 'Draft'} • {latestDraw.winners?.length || 0} Winners
+                  </p>
+                  <p className="text-brand-400 font-bold mb-6">Prize Pool: ${latestDraw.prizePool}</p>
+                </>
+              ) : (
+                <div className="py-10">
+                  <Trophy className="h-12 w-12 text-slate-700 mb-4 mx-auto" />
+                  <p className="text-slate-500">No active draw found.</p>
+                </div>
+              )}
+              <Link to="/admin/draws">
+                <button className="px-6 py-2 bg-white text-black font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">
+                  Manage Draws
+                </button>
+              </Link>
            </div>
         </div>
       </div>

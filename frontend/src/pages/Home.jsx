@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Trophy, Heart, ShieldCheck, ChevronRight } from 'lucide-react';
+import { ArrowRight, Trophy, Heart, ShieldCheck, ChevronRight, PlayCircle, Star } from 'lucide-react';
 import useStore from '../store/useStore';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
   const { charities, fetchCharities } = useStore();
@@ -11,6 +12,64 @@ const Home = () => {
   }, [fetchCharities]);
 
   const featuredCharities = charities.slice(0, 3);
+  const { user } = useAuth();
+
+  if (user) {
+    return (
+      <div className="w-full bg-black text-slate-300 min-h-[calc(100vh-64px)]">
+        {/* Logged In Hero Section */}
+        <section className="relative py-20 overflow-hidden">
+          <div className="absolute top-0 right-0 w-[40%] h-[100%] rounded-full bg-brand-500/10 blur-[120px] pointer-events-none" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="bg-[#111] border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl shadow-brand-500/5 mb-12">
+              <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">
+                Welcome back, {user.name.split(' ')[0]}!
+              </h1>
+              <p className="text-lg text-slate-400 max-w-2xl mb-8">
+                Ready to hit the links? You have full access to log scores, participate in draws, and track your charitable impact from your dashboard.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/dashboard" className="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl text-md font-bold transition-all shadow-lg shadow-brand-500/20">
+                  <PlayCircle size={20} /> Go to Dashboard
+                </Link>
+                <Link to="/draws" className="flex items-center justify-center gap-2 bg-[#1a1a1a] border border-white/10 hover:border-white/30 text-white px-6 py-3 rounded-xl text-md font-medium transition-all">
+                  <Trophy size={20} /> View Latest Draws
+                </Link>
+              </div>
+            </div>
+
+            {/* Quick Stats or Updates */}
+            <div className="grid md:grid-cols-3 gap-6 mb-16">
+              <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 group hover:border-brand-500/30 transition-colors">
+                 <div className="h-12 w-12 rounded-xl bg-brand-500/10 flex items-center justify-center mb-4 text-brand-400">
+                    <Star size={24} />
+                 </div>
+                 <h3 className="text-xl font-bold text-white mb-2">Weekly Draw Live</h3>
+                 <p className="text-sm text-slate-400 mb-4">Submit your scores before Friday directly to earn this week's tickets.</p>
+                 <Link to="/draws" className="text-brand-400 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Check Prizes <ArrowRight size={16} /></Link>
+              </div>
+              <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 group hover:border-rose-500/30 transition-colors">
+                 <div className="h-12 w-12 rounded-xl bg-rose-500/10 flex items-center justify-center mb-4 text-rose-400">
+                    <Heart size={24} />
+                 </div>
+                 <h3 className="text-xl font-bold text-white mb-2">Global Impact</h3>
+                 <p className="text-sm text-slate-400 mb-4">Our community just passed $100k raised for various non-profit organizations.</p>
+                 <Link to="/charities" className="text-rose-400 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Explore Charities <ArrowRight size={16} /></Link>
+              </div>
+              <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 group hover:border-emerald-500/30 transition-colors">
+                 <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4 text-emerald-400">
+                    <ShieldCheck size={24} />
+                 </div>
+                 <h3 className="text-xl font-bold text-white mb-2">Manage Subscription</h3>
+                 <p className="text-sm text-slate-400 mb-4">Ensure your membership is active to qualify for the ultimate Grand Prize draw.</p>
+                 <Link to="/subscription" className="text-emerald-400 text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Subscription Settings <ArrowRight size={16} /></Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-black text-slate-300">

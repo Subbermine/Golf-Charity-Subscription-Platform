@@ -29,6 +29,15 @@ export const getMyWinnings = async (req, res) => {
   }
 };
 
+export const getAllWinners = async (req, res) => {
+  try {
+    const winners = await Winner.find({}).populate('userId drawId');
+    res.json(winners);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const verifyWinner = async (req, res) => {
   const { status } = req.body;
   try {

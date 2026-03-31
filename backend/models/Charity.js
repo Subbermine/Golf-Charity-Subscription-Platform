@@ -14,6 +14,10 @@ const charitySchema = new mongoose.Schema({
     type: String,
     default: 'no-image.jpg'
   },
+  category: {
+    type: String,
+    default: 'General'
+  },
   totalDonations: {
     type: Number,
     default: 0

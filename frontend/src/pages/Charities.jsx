@@ -1,24 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import useStore from '../store/useStore';
-import { Search, Filter, CheckCircle2 } from 'lucide-react';
+import { Search, Filter, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Charities = () => {
-  const { charities, fetchCharities, isLoading } = useStore();
-  const { user } = useAuth();
+  const { charities, fetchCharities, selectCharity, isLoading } = useStore();
+  const { user, setUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  
-  // Just for mock UX
-  const [selectedId, setSelectedId] = useState(user?.charityId || null);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  // Get charityId from user object (it might be an object if populated or just an ID)
+  const selectedId = typeof user?.charityId === 'object' ? user?.charityId?._id : user?.charityId;
 
   useEffect(() => {
     fetchCharities();
   }, [fetchCharities]);
 
-  const categories = ['All', ...new Set(charities.map(c => c.category))];
+  const handleSelectCharity = async (charityId) => {
+    if (!user) return;
+    setUpdatingId(charityId);
+    const updatedUser = await selectCharity(charityId);
+    if (updatedUser) {
+      // Update local auth context to reflect change
+      setUser(prev => ({ ...prev, charityId: updatedUser.charityId }));
+    }
+    setUpdatingId(null);
+  };
+const categories = ['All', ...new Set(charities.map(c => c.category))];
 
-  const filtered = charities.filter(c => {
+const filtered = charities.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'All' || c.category === activeCategory;
     return matchesSearch && matchesCategory;
@@ -67,7 +78,7 @@ const Charities = () => {
       </div>
 
       {/* Grid */}
-      {isLoading ? (
+      {isLoading && charities.length === 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1,2,3,4,5,6].map(i => (
             <div key={i} className="animate-pulse bg-[#111] rounded-2xl h-[400px]"></div>
@@ -94,14 +105,17 @@ const Charities = () => {
                 <p className="text-slate-400 text-sm mb-6 line-clamp-3">{charity.description}</p>
                 
                 <button
-                  onClick={() => setSelectedId(charity._id)}
+                  onClick={() => handleSelectCharity(charity._id)}
+                  disabled={updatingId === charity._id}
                   className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                     selectedId === charity._id 
                       ? 'bg-brand-500/20 text-brand-400 border border-brand-500/50' 
                       : 'bg-white text-black hover:bg-slate-200'
                   }`}
                 >
-                  {selectedId === charity._id ? (
+                  {updatingId === charity._id ? (
+                    <Loader2 className="animate-spin h-5 w-5" />
+                  ) : selectedId === charity._id ? (
                     <><CheckCircle2 size={18} /> Selected</>
                   ) : (
                     'Support this cause'

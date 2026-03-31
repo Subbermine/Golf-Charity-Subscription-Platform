@@ -2,18 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import useStore from '../store/useStore';
 import { Link } from 'react-router-dom';
-import { Plus, Trophy, Calendar, Ticket, ArrowRight, Activity, Crown } from 'lucide-react';
+import { Plus, Trophy, Calendar, Ticket, ArrowRight, Activity, Crown, Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { scores, subscription, fetchScores, fetchSubscription, addScore, isLoading } = useStore();
+  const { 
+    scores, subscription, fetchScores, fetchSubscription, addScore, 
+    latestDraw, fetchLatestDraw, myWinnings, fetchMyWinnings, isLoading 
+  } = useStore();
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [newScore, setNewScore] = useState({ value: '', date: new Date().toISOString().split('T')[0] });
 
   useEffect(() => {
     fetchScores();
     fetchSubscription();
-  }, [fetchScores, fetchSubscription]);
+    fetchLatestDraw();
+    fetchMyWinnings();
+  }, [fetchScores, fetchSubscription, fetchLatestDraw, fetchMyWinnings]);
 
   const handleScoreSubmit = async (e) => {
     e.preventDefault();
@@ -28,6 +33,8 @@ const Dashboard = () => {
   const avgScore = scores.length > 0 
     ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) 
     : '0.0';
+
+  const totalWinnings = myWinnings.reduce((acc, curr) => acc + curr.prizeAmount, 0);
 
   const userCharity = user?.charityId;
 
@@ -76,7 +83,7 @@ const Dashboard = () => {
                 <Trophy size={18} />
                 <span className="text-sm font-medium">Winnings</span>
               </div>
-              <p className="text-3xl font-bold text-white">$0</p>
+              <p className="text-3xl font-bold text-white">${totalWinnings.toFixed(2)}</p>
             </div>
             <div className="glass-card p-5 bg-gradient-to-br from-charity-900/50 to-[#111] border-charity-500/30">
               <div className="flex items-center gap-3 mb-2 text-charity-400">
@@ -87,6 +94,32 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Latest Draw Results */}
+          {latestDraw && (
+            <div className="glass-card p-6 bg-gradient-to-r from-brand-900/20 to-transparent border-brand-500/30">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Trophy className="text-brand-400" size={20} />
+                  Latest Draw Results ({latestDraw.month})
+                </h2>
+                <Link to="/draws" className="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                  All Results <ArrowRight size={14} />
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-4 items-center justify-center py-4">
+                {latestDraw.numbers.map((num, i) => (
+                  <div key={i} className="w-12 h-12 rounded-full border-2 border-brand-500 flex items-center justify-center text-xl font-bold text-white bg-black/50 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
+                    {num}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Total Prize Pool</span>
+                <span className="text-brand-400 font-bold text-lg">${latestDraw.prizePool.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
           {/* Recent Scores */}
           <div className="glass-card p-6">
             <div className="flex justify-between items-center mb-6">
@@ -95,8 +128,8 @@ const Dashboard = () => {
             </div>
             
             {isLoading && !scores.length ? (
-              <div className="animate-pulse flex flex-col gap-4">
-                {[1,2,3].map(i => <div key={i} className="h-16 bg-[#1a1a1a] rounded-xl w-full"></div>)}
+              <div className="flex justify-center py-10">
+                <Loader2 className="animate-spin text-brand-500 h-8 w-8" />
               </div>
             ) : !scores || scores.length === 0 ? (
                <div className="text-center py-8 text-slate-500">
@@ -104,7 +137,7 @@ const Dashboard = () => {
                </div>
             ) : (
               <div className="space-y-4">
-                {[...scores].reverse().map((scoreValue, idx) => (
+                {[...scores].reverse().slice(0, 5).map((scoreValue, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-white/5 hover:border-brand-500/30 transition-colors bg-[#111]">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-brand-500/20 border border-brand-500/30 text-brand-400 flex items-center justify-center font-bold text-lg">
@@ -116,7 +149,7 @@ const Dashboard = () => {
                           <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-2 py-0.5 rounded-md font-medium">Verified</span>
                         </p>
                         <p className="text-sm text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Calendar size={14} /> Recent Round
+                          <Calendar size={14} /> Round Entered
                         </p>
                       </div>
                     </div>
@@ -130,6 +163,31 @@ const Dashboard = () => {
         {/* Sidebar (Right Col) */}
         <div className="space-y-8">
           
+          {/* My Winnings */}
+          {myWinnings.length > 0 && (
+            <div className="glass-card p-6 border-emerald-500/30">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Trophy className="text-emerald-400" size={18} />
+                My Winnings
+              </h2>
+              <div className="space-y-3">
+                {myWinnings.map((w, i) => (
+                  <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-white">${w.prizeAmount.toFixed(2)}</span>
+                      <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${
+                        w.status === 'paid' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-emerald-500/20 text-emerald-400'
+                      }`}>
+                        {w.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Match {w.matchCount}/5 • {w.drawId?.month}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Subscription Status */}
           <div className="glass-card overflow-hidden">
             <div className="h-1 w-full bg-brand-500 shadow-[0_0_10px_var(--tw-shadow-color)] shadow-brand-500"></div>

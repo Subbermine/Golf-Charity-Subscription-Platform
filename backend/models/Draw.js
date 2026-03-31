@@ -27,6 +27,14 @@ const drawSchema = new mongoose.Schema({
   prizePool: {
     type: Number,
     default: 0
+  },
+  rolloverFromPrevious: {
+    type: Number,
+    default: 0
+  },
+  rolloverToNext: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

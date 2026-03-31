@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { Search, Filter, MoreVertical, Shield, User, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Filter, MoreVertical, Shield, Loader2 } from 'lucide-react';
+import useStore from '../../store/useStore';
 
 const Users = () => {
+  const { adminUsers, fetchAdminUsers, isLoading } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Mock Data
-  const [users] = useState([
-    { id: '1', name: 'Jake Mitchell', email: 'jake@example.com', plan: 'pro', status: 'active', joined: '2026-01-15', scores: 42 },
-    { id: '2', name: 'Sarah Lewis', email: 'sarah@example.com', plan: 'basic', status: 'active', joined: '2026-02-10', scores: 12 },
-    { id: '3', name: 'Tom Banning', email: 'tom@example.com', plan: 'free', status: 'inactive', joined: '2026-03-01', scores: 0 },
-    { id: '4', name: 'Emily Clark', email: 'emily@example.com', plan: 'pro', status: 'active', joined: '2025-11-20', scores: 156 },
-    { id: '5', name: 'admin', email: 'admin@golf.com', plan: 'admin', status: 'active', joined: '2025-01-01', scores: 0 },
-  ]);
+
+  useEffect(() => {
+    fetchAdminUsers();
+  }, [fetchAdminUsers]);
+
+  const filteredUsers = adminUsers.filter(u => 
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 flex flex-col h-full">
@@ -44,7 +46,13 @@ const Users = () => {
         </div>
 
         {/* Table */}
-        <div className="flex-1 overflow-x-auto">
+        <div className="flex-1 overflow-x-auto relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] z-10 flex items-center justify-center">
+              <Loader2 className="animate-spin text-brand-500 h-8 w-8" />
+            </div>
+          )}
+          
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead className="bg-[#0a0a0a]">
               <tr>
@@ -57,29 +65,35 @@ const Users = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {users.map(u => (
-                <tr key={u.id} className="hover:bg-white/[0.02] transition-colors group">
+              {filteredUsers.map(u => (
+                <tr key={u._id} className="hover:bg-white/[0.02] transition-colors group">
                   <td className="py-3 px-6">
                     <div className="flex flex-col">
                       <span className="font-medium text-white flex items-center gap-2">
                         {u.name}
-                        {u.plan === 'admin' && <Shield size={14} className="text-rose-500" />}
+                        {u.role === 'admin' && <Shield size={14} className="text-rose-500" />}
                       </span>
                       <span className="text-sm text-slate-500">{u.email}</span>
                     </div>
                   </td>
                   <td className="py-3 px-6">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      u.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${
+                      u.subscriptionId?.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'
                     }`}>
-                      {u.status}
+                      {u.subscriptionId?.status || 'Inactive'}
                     </span>
                   </td>
                   <td className="py-3 px-6">
-                    <span className="capitalize text-sm text-slate-300 font-medium">{u.plan}</span>
+                    <span className="capitalize text-sm text-slate-300 font-medium">
+                      {u.role === 'admin' ? 'Admin' : (u.subscriptionId?.plan || 'Free')}
+                    </span>
                   </td>
-                  <td className="py-3 px-6 text-sm text-slate-400">{u.joined}</td>
-                  <td className="py-3 px-6 text-sm text-brand-400 font-medium">{u.scores} logged</td>
+                  <td className="py-3 px-6 text-sm text-slate-400">
+                    {new Date(u.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-6 text-sm text-brand-400 font-medium">
+                    {u.scores?.length || 0} logged
+                  </td>
                   <td className="py-3 px-6 text-right">
                     <button className="text-slate-500 hover:text-white p-1 rounded transition-colors focus:ring-2 focus:ring-brand-500 outline-none">
                       <MoreVertical size={16} />
@@ -87,16 +101,24 @@ const Users = () => {
                   </td>
                 </tr>
               ))}
+              
+              {!isLoading && filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="py-20 text-center text-slate-500">
+                    No users found matching your criteria.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         
-        {/* Pagination mock */}
+        {/* Pagination footer */}
         <div className="p-4 border-t border-white/5 flex items-center justify-between text-sm text-slate-400 bg-[#111]">
-          <span>Showing 1 to 5 of 12,450 results</span>
+          <span>Showing {filteredUsers.length} results</span>
           <div className="flex gap-2">
             <button className="px-3 py-1 border border-white/10 rounded hover:bg-white/5 disabled:opacity-50" disabled>Previous</button>
-            <button className="px-3 py-1 border border-white/10 rounded hover:bg-white/5">Next</button>
+            <button className="px-3 py-1 border border-white/10 rounded hover:bg-white/5 disabled:opacity-50" disabled>Next</button>
           </div>
         </div>
       </div>
